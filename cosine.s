@@ -1,26 +1,26 @@
-        #Taylor exapnasion approximation of sine
+        #Taylor exapnasion approximation of cosine
         #Daniel Jolicoeur | CMSC411 | April, 2015
-        #summation_0^n(X - (X^3/3!) + (X^5/5!) - (X^7/7!)...)
+        #summation_0^n(1 - (X^2/2!) + (X^4/4!) - (X^6/6!)...)
         #important registers:
         #$f2 X, $t1 n (loop counter), $f4 i (double iteration counter),
         #$f6 factorial, $f8 flag, $f10 sub, $f12 exp
         .data
-        #start: The taylor expansion to approxomate sine is odd,
-        #thus we begin at n = 3 (at 1 everything cancels, leaving X).
+        #start: The taylor expansion to approxomate cosine is even,
+        #thus begins at n = 2 (at zero everything cancels, leaving 1).
         #this allows us to efficiently calcuate the next exponent
         #by keeping a running track of x^(start + 2) and
         #calculate the exponenteation by only multiplying the
         #running value by X twice more. each iteration only need
         #calculate X^current * X * X
 
-start:  .double 3.0
+start:  .double 2.0
 
         #fact: it is uneccessary to re-calculate the entire factorial every iteration.
-        #we know our first factorial is 3! which is 6. From there, each iteration
+        #we know our first factorial is 2! which is 6. From there, each iteration
         #is simply calculated by a subtraction and two multiplications, whereby
         #we simply take the fact_current * (i_current - 1.0) * (i_current)
 
-fact:   .double 6.0
+fact:   .double 2.0
 
         #flag: used to alternate between addition and subtraction
         #of terms in the summation
@@ -33,6 +33,8 @@ flag:   .double -1.0
 negone: .double -1.0
 
         #two:  needed to calculate 2pi
+
+one:    .double 1.0
 
 two:    .double 2.0
 
@@ -59,6 +61,7 @@ main:
         l.d $f10,negone
         l.d $f18,two
         l.d $f20, pi
+        l.d $f30, one
 
         mul.d $f22,$f20,$f18            #normalize the double passed (theta) between
         mul.d $f24,$f20,$f0             #-pi and pi. theta - 2pi*floor(theta + pi)/2pi
@@ -70,14 +73,14 @@ main:
         sub.d $f0,$f0,$f28
 
                                         #We set our initial values to the
-        mov.d $f2,$f0                   #the point in the summation s.t. i =
+        mov.d $f2,$f0                   #the point in the summation s.t. i = 2,
                                         #this it is necessary to "seed" the loop
         mul.d $f12,$f2,$f2              #before we iterate.  The code to the left is
-        mul.d $f12,$f12,$f2             #the equivalent of sum(X - (X^3/3!)).
+                                        #the equivalent of sum(1 - (X^2/2!)).
         div.d $f14,$f12,$f6             #from here, we can step through the
         mul.d $f14,$f14,$f8             #remainder of the series.
         mul.d $f8,$f8,$f10
-        add.d $f2,$f2,$f14              #$f2 gets (X + (-1 * (x^3/3!)))
+        add.d $f2,$f30,$f14             #$f2 gets (1 + 	(-1 * (x^2/2!)))
         add.d $f4,$f4,$f18
 
 
