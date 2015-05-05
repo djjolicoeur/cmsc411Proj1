@@ -69,37 +69,37 @@ nl:     .asciiz "\n"
         .text
 
 
-#main input loop
+        #main input loop
 main:
-        li $t0,7
-        li $t1,2
-        li $t3,1
-        li $t4,2
-        li $t5,3
-        li $t6,4
-        li $v0,4
-        la $a0,enter_function
-        syscall
-        li $v0,5
-        syscall
-        move $t2,$v0
-        beq $t2,$t6,exit
-        bgt $t2,$t6,invalid
-        li $v0,4
-        la $a0,enter_double             #read in number of iterations to expand to
-        syscall
-        li $v0,7
-        syscall
+        li $t0,7                        #max iterations
+        li $t1,2                        #start index
+        li $t3,1                        #sine option
+        li $t4,2                        #cosine option
+        li $t5,3                        #tangent option
+        li $t6,4                        #exit option
+        li $v0,4                        #load print string syscall opt
+        la $a0,enter_function           #print syscall
+        syscall                         #call syscall
+        li $v0,5                        #load read int syscall option
+        syscall                         #syscall to read int input
+        move $t2,$v0                    #store input
+        beq $t2,$t6,exit                #check for exit
+        bgt $t2,$t6,invalid             #check for invalid
+        li $v0,4                        #load print string option
+        la $a0,enter_double             #load input prompt
+        syscall                         #print prompt string
+        li $v0,7                        #set read double syscall flag
+        syscall                         #call read double
 
-        l.d $f10,negone
+        l.d $f10,negone                 #set constants
         l.d $f18,two
         l.d $f20, pi
-        beq $t2,$t3,normalize
+        beq $t2,$t3,normalize          #all valid option go to normalize
         beq $t2,$t4,normalize
         beq $t2,$t5,normalize
-        b invalid
+        b invalid                       #catch invalid option
 
-
+        #normalize user input to between -pi and pi
 normalize:
         mul.d $f22,$f20,$f18            #normalize the double passed (theta) between
         mul.d $f24,$f20,$f0             #-pi and pi. theta - 2pi*floor(theta + pi)/2pi
@@ -111,14 +111,15 @@ normalize:
         sub.d $f0,$f0,$f28
         b switch
 
-
+        #switch on user input of trig functions
 switch:
-        beq $t2,$t3,sine
+        beq $t2,$t3,sine                #switch on input function choice
         beq $t2,$t4,cosine
         beq $t2,$t5,sine
 
+        #sine routine
 sine:
-        l.d $f4,sine_start                   #load up initial and static values
+        l.d $f4,sine_start              #load up sine initial and static values
         l.d $f6,sine_fact
         l.d $f8,flag
 
@@ -135,7 +136,7 @@ sine:
         add.d $f4,$f4,$f18
 
 
-
+        #iterate over sine taylor expansion terms
 sine_step:
         #Let it rip                     #This code is the iterative step.
         bgt $t1,$t0,sine_switch         #Each iteration updates the current
@@ -152,10 +153,12 @@ sine_step:
         addi $t1,$t1,1                  #is greater than the target iterations
         b sine_step
 
+        #branch to sine_exit if in sine, continue tangent routine if tangent
 sine_switch:
         beq $t2,$t3,sine_exit
         beq $t2,$t5,to_cosine
 
+        #exit sine function and branch back to main
 sine_exit:
         mov.d  $f12,$f2                 #print results to screen
         li $v0,3                        #and return
@@ -165,14 +168,13 @@ sine_exit:
         syscall
         b main
 
+        #for sine->tangent
 to_cosine:
-        mov.d $f20,$f2
-        b cosine
+        mov.d $f20,$f2                  #store value from sine for tangent
+        b cosine                        #branch to cosine
 
-
+        #cosine routine
 cosine:
-
-        #mov.d $f20,$f2                  #hold our sine result in $f20
         add $t0,$v0,$zero
         li $t1,2
         l.d $f4,cosine_start            #load up initial cosine values
@@ -191,7 +193,7 @@ cosine:
         add.d $f4,$f4,$f18
 
 
-
+        #iterate over cosine expansion terms
 cosine_step:
         #Let it rip                     #This code is the iterative cosine step.
         bgt $t1,$t0,cosine_switch       #Each iteration updates the current
@@ -208,12 +210,13 @@ cosine_step:
         addi $t1,$t1,1                  #is greater than the target iterations
         b cosine_step
 
-
+        #switch to sine exit (reusable for cosine) if we are in cosine,
+        #tangent_exit if we are in tangent routine
 cosine_switch:
         beq $t2,$t4,sine_exit
         beq $t2,$t5,tan_exit
 
-
+        #divide sine/cosine results, print answer, and return to input loop
 tan_exit:
 
         div.d $f2,$f20,$f2              #$f2 gets sin(x)/cos(x)
@@ -221,16 +224,18 @@ tan_exit:
         li $v0,3                        #and return
         syscall
         li $v0,4
-	la $a0,nl
-	syscall
+        la $a0,nl
+        syscall
         b main
 
+        #print invalid option and branch to main
 invalid:
         li $v0,4                        #print invalid option
         la $a0,inval
         syscall
         b main
 
+        #exit machine
 exit:
         li $v0,4                        #exit program
         la $a0,gb
