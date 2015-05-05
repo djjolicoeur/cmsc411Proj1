@@ -60,11 +60,11 @@ enter_double:   .asciiz "Enter a number\n"
 
 enter_function: .asciiz "Please select a valid option\n\t1) Sine\n\t2) Cosine\n\t3) Tangent\n\t4) Exit\n"
 
-gb:          .asciiz "Goodbye!\n"
+gb:             .asciiz "Goodbye!\n"
 
-inval:  .asciiz  "Invalid Option!\n"
+inval:          .asciiz  "Invalid Option!\n"
 
-nl:     .asciiz "\n"
+nl:             .asciiz "\n"
 
         .text
 
